@@ -8,7 +8,7 @@ import java.util.List;
 public class SuperNode {
     public String Superid;
     
-    public SuperNodeStruct(String Superid)
+    public SuperNode(String Superid)
     {
         this.Superid = Superid;
     }
