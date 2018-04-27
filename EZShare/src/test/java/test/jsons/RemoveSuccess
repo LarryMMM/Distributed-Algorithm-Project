@@ -1,0 +1,9 @@
+{
+    "command": "REMOVE",
+    "resource": {
+        "uri": "http://www.unimelb.edu.au",
+        "channel": "windy",
+        "owner": "day",
+        "ezserver": null
+    }
+}

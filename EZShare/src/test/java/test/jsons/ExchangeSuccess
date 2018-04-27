@@ -1,0 +1,12 @@
+{
+    "command": "EXCHANGE",
+    "serverList": [
+        {
+            "hostname": "115.146.85.165",
+            "port": 3780
+        },
+        {
+            "hostname": "115.146.85.24",
+            "port": 3780
+        }]
+}
