@@ -128,6 +128,141 @@ public class ServerList {
         }
     }
 
+    public synchronized boolean is_confirm_finished(List idlist)
+    
+    {
+    	if (serverList.size()==idlist.size()){return true;}
+    	else{return false;}
+    	
+    	
+    }
+  
+    public synchronized void confirm_id_Echange(int server_id, List idlist)
+    {
+    	if (serverList.size() > 0)
+    	{
+    		for (int i = 0; i < serverList.size(); i ++)
+    		{
+    			Host targetHost = serverList.get(i);
+    			Socket socket = null;
+    			try{
+    				if (secure) {socket = Server.context.getSocketFactory().createSocket();} 
+    				else {socket = new Socket();}
+    				socket.connect(new InetSocketAddress(targetHost.getHostname(), targetHost.getPort()), SERVER_TIMEOUT);
+                    socket.setSoTimeout(SERVER_TIMEOUT);
+
+                    DataInputStream input = new DataInputStream(socket.getInputStream());
+                    DataOutputStream output = new DataOutputStream(socket.getOutputStream());
+
+                    Server.logger.fine("Regular EXCHANGE to " + socket.getRemoteSocketAddress());
+
+                    IdExchangeMessage exchangeMessage = new ExchangeMessage(idlist,server_id);
+                     
+
+                    String JSON = new Gson().toJson(exchangeMessage);
+                    output.writeUTF(JSON);
+                    output.flush();
+    				
+    				
+    				
+    				}
+    			catch (ConnectException ex) {
+                    Server.logger.warning(targetHost.toString() + " connection timeout");
+                    removeServer(targetHost, secure);
+              } catch (SocketTimeoutException ex) {
+                    Server.logger.warning(targetHost.toString() + " readUTF() timeout");
+                    removeServer(targetHost, secure);
+              } catch (IOException ex) {
+                    /* Unclassified exception */
+                    Server.logger.warning(targetHost.toString() + " IOException");
+                    removeServer(targetHost, secure);
+              } finally {
+                  try {
+                      if (socket != null)
+                          socket.close();
+                  } catch (IOException e) {
+                      Server.logger.warning("IOException! Disconnect!");
+                  }
+              }}}}
+
+    public int get_max(List idlist)
+    {
+    	int max = 0;
+    	for (int i = 0; i < serverList.size();i++)
+    	{
+    		int element = (int) (idlist.get(i));
+    		if (max < element )
+    		{
+    			max = element;
+    		}
+    	}
+    	return max;
+    }
+    
+    			
+    			
+    public synchronized void confirm_super_node(int server_id, List idlist)
+    {
+    	if (serverList.size() > 0)
+    	{
+    		for (int i = 0; i < serverList.size(); i ++)
+    		{
+    			Host targetHost = serverList.get(i);
+    			Socket socket = null;
+    			try{
+    				if (secure) {socket = Server.context.getSocketFactory().createSocket();} 
+    				else {socket = new Socket();}
+    				socket.connect(new InetSocketAddress(targetHost.getHostname(), targetHost.getPort()), SERVER_TIMEOUT);
+                    socket.setSoTimeout(SERVER_TIMEOUT);
+
+                    DataInputStream input = new DataInputStream(socket.getInputStream());
+                    DataOutputStream output = new DataOutputStream(socket.getOutputStream());
+
+                    Server.logger.fine("Regular EXCHANGE to " + socket.getRemoteSocketAddress());
+                    ServerList constructor;
+					int max_id = constructor.get_max(idlist);
+
+                    Message exchangeMessage = new ExchangeMessage(max_id);
+                     
+
+                    String JSON = new Gson().toJson(exchangeMessage);
+                    output.writeUTF(JSON);
+                    output.flush();
+    				
+    				
+    				
+    				}
+    			catch (ConnectException ex) {
+                    Server.logger.warning(targetHost.toString() + " connection timeout");
+                    removeServer(targetHost, secure);
+              } catch (SocketTimeoutException ex) {
+                    Server.logger.warning(targetHost.toString() + " readUTF() timeout");
+                    removeServer(targetHost, secure);
+              } catch (IOException ex) {
+                    /* Unclassified exception */
+                    Server.logger.warning(targetHost.toString() + " IOException");
+                    removeServer(targetHost, secure);
+              } finally {
+                  try {
+                      if (socket != null)
+                          socket.close();
+                  } catch (IOException e) {
+                      Server.logger.warning("IOException! Disconnect!");
+                  }
+              }
+    			
+    			
+    			
+    			
+    	
+    		
+    		}
+    		
+    	}
+    	
+    	
+    }
+    
     public synchronized void removeServer(Host inputHost, boolean secure) {
 
         closeSubscribeRelay(inputHost);
@@ -166,7 +301,6 @@ public class ServerList {
             return false;
         }
     }
-
 
     public void openSubscribeRelay(Host target) {
         Socket socket = null;
@@ -326,5 +460,7 @@ public class ServerList {
 
     }
 
+    
+    
 
 }
