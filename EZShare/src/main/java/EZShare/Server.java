@@ -41,6 +41,11 @@ public class Server {
     public static long EXCHANGE_PERIOD = 600000;
     public static long INTERVAL = 1000;
     public static String SECRET = random(26);
+    static Random random = new Random(1000);
+    public static int server_id = random.nextInt(1000);
+    public static ArrayList id_List = new ArrayList();
+    public static boolean is_Supernode = false;
+    
 
     /* Data structures and utilities */
     public static SSLContext context = null;
