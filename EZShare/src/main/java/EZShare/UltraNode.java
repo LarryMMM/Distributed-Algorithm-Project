@@ -3,8 +3,6 @@ package EZShare;
 import EZShare.log.LogCustomFormatter;
 import EZShare.message.Host;
 import EZShare.message.ResourceTemplate;
-import EZShare.message.SubscribeMessage;
-import EZShare.message.UnsubscribeMessage;
 import EZShare.server.FileList;
 import EZShare.server.ServerList;
 import EZShare.server.Subscription;
@@ -12,30 +10,37 @@ import EZShare.server.WorkerThread;
 import com.google.gson.Gson;
 import org.apache.commons.cli.*;
 
-import java.io.*;
-import java.net.*;
+import javax.net.ServerSocketFactory;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLServerSocket;
+import javax.net.ssl.TrustManagerFactory;
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.security.*;
 import java.security.cert.CertificateException;
-import java.util.*;
+import java.util.Map;
+import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
-import java.util.logging.SocketHandler;
-import javax.net.ServerSocketFactory;
-import javax.net.ssl.*;
 
 /**
- * @author Wenhao Zhao, Ying Li
+ * @author Ying Li
  */
-public class Server {
+public class UltraNode {
 
     /* Default configuration */
     public static String HOST = "localhost";
-    public static int PORT = 3780;
+    public static int PORT = 3785;
     public static int SPORT = 3781;
     public static final int MAX_THREAD_COUNT = 50;
     public static long EXCHANGE_PERIOD = 600000;
@@ -44,7 +49,7 @@ public class Server {
 
     /* Data structures and utilities */
     public static SSLContext context = null;
-    public static final Logger logger = LogCustomFormatter.getLogger(Server.class.getName());
+    public static final Logger logger = LogCustomFormatter.getLogger(UltraNode.class.getName());
     private static final FileList fileList = new FileList();
     private static final ServerList serverList = new ServerList(false);
     private static final ServerList secure_severList = new ServerList(true);
@@ -84,7 +89,6 @@ public class Server {
         options.addOption("debug", false, "print debug information");
         options.addOption("sport", true, "server secure port, an integer");
 
-
         //parse command line arguments
         return options;
     }
@@ -116,7 +120,7 @@ public class Server {
     }
 
     public static void main(String[] args) {
-        logger.info("Starting the EZShare Server");
+        logger.info("Starting the Ultra Nodes");
 
         /* Timer running as a daemon thread schedules the regular EXCHANGE command. */
         Timer timer = new Timer(true);
@@ -176,21 +180,18 @@ public class Server {
             logger.info("Using secret: " + SECRET);
 
 
-
-
-
             /* SSL Context! */
             String keystorePath = "/server.keystore";
             String trustKeystorePath = "/trust-ca.keystore";
             String keystorePassword = "123456";
-            Server.context = SSLContext.getInstance("SSL");
+            UltraNode.context = SSLContext.getInstance("SSL");
 
             KeyStore keystore = KeyStore.getInstance("pkcs12");
-            InputStream keystoreFis = Server.class.getResourceAsStream(keystorePath);
+            InputStream keystoreFis = UltraNode.class.getResourceAsStream(keystorePath);
             keystore.load(keystoreFis, keystorePassword.toCharArray());
 
             KeyStore trustKeystore = KeyStore.getInstance("jks");
-            InputStream trustKeystoreFis = Server.class.getResourceAsStream(trustKeystorePath);
+            InputStream trustKeystoreFis = UltraNode.class.getResourceAsStream(trustKeystorePath);
             trustKeystore.load(trustKeystoreFis, keystorePassword.toCharArray());
 
             KeyManagerFactory kmf = KeyManagerFactory.getInstance("sunx509");
@@ -199,7 +200,7 @@ public class Server {
             TrustManagerFactory tmf = TrustManagerFactory.getInstance("sunx509");
             tmf.init(trustKeystore);
 
-            Server.context.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
+            UltraNode.context.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
 
 
             logger.info("Bound to port " + PORT);
@@ -211,7 +212,7 @@ public class Server {
             logger.info("ServerSocket initialized.");
 
             /* Create SSLServerSocket */
-            SSLServerSocket sslServerSocket = (SSLServerSocket) Server.context.getServerSocketFactory().createServerSocket(SPORT);
+            SSLServerSocket sslServerSocket = (SSLServerSocket) UltraNode.context.getServerSocketFactory().createServerSocket(SPORT);
             sslServerSocket.setNeedClientAuth(true);
             logger.info("SSLServerSocket initialized.");
 
@@ -234,7 +235,7 @@ public class Server {
 
                             /* Assign a worker thread for this socket. */
                             try {
-                                Server.threadPool.submit(new WorkerThread(client, fileList, serverList, false));
+                                UltraNode.threadPool.submit(new WorkerThread(client, fileList, serverList, false));
                             } catch (IOException e) {
                                 logger.log(Level.WARNING, "{0} cannot create stream", client.getRemoteSocketAddress().toString());
                                 client.close();
@@ -264,7 +265,7 @@ public class Server {
 
                             /* Assign a worker thread for this socket. */
                             try {
-                                Server.threadPool.submit(new WorkerThread(client, fileList, secure_severList, true));
+                                UltraNode.threadPool.submit(new WorkerThread(client, fileList, secure_severList, true));
                             } catch (IOException e) {
                                 logger.log(Level.WARNING, "{0} cannot create stream", client.getRemoteSocketAddress().toString());
                                 client.close();
@@ -282,10 +283,10 @@ public class Server {
 
             Thread listener = new Thread(() -> {
                 while (true){
-                    for (Map.Entry<Host,Socket> entry: Server.unsecure_relay.entrySet()) {
+                    for (Map.Entry<Host,Socket> entry: UltraNode.unsecure_relay.entrySet()) {
                         forward(entry.getValue());
                     }
-                    for (Map.Entry<Host,Socket> entry: Server.secure_relay.entrySet()) {
+                    for (Map.Entry<Host,Socket> entry: UltraNode.secure_relay.entrySet()) {
                         forward(entry.getValue());
                     }
                 }

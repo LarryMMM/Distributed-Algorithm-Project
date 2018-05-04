@@ -108,6 +108,7 @@ public class Client {
      * @param line command line args
      * @return Host object
      */
+
     private static Host getHost(CommandLine line) {
         //parse commandline args to Host object
         String hostname = line.getOptionValue("host", "localhost");

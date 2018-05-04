@@ -1,0 +1,14 @@
+{
+    "command": "QUERY",
+    "relay": true,
+    "resourceTemplate": {
+        "name": "Unimelb",
+        "tags": [
+            "web" ],
+        "description": "The main page",
+        "uri": "",
+        "channel": "windy",
+        "owner": "",
+        "ezserver": null
+    }
+}

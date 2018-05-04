@@ -1,0 +1,14 @@
+{
+    "command": "REMOVE",
+    "resource": {
+        "name": "Unimelb website",
+        "tags": [
+            "web",
+            "html" ],
+        "description": "The main page for the University of Melbourne",
+        "uri": "http://www.unimelb",
+        "channel": "windy",
+        "owner": "day",
+        "ezserver": null
+    }
+}
